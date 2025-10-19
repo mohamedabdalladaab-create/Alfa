@@ -1,0 +1,1253 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVRYSDI Stock Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --success: #2ecc71;
+            --warning: #f39c12;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark);
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav li {
+            margin-left: 1.5rem;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        nav a:hover, nav a.active {
+            background-color: var(--secondary);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        h1, h2, h3 {
+            color: var(--primary);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+        
+        .stat-positive {
+            color: var(--success);
+        }
+        
+        .stat-negative {
+            color: var(--accent);
+        }
+        
+        .chart-container {
+            height: 300px;
+            margin-bottom: 2rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-danger {
+            background-color: var(--accent);
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+        }
+        
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 1.5rem;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom-color: var(--secondary);
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">EVRYSDI Stock Management</div>
+        <nav>
+            <ul>
+                <li><a href="#" class="nav-link active" data-page="dashboard">Dashboard</a></li>
+                <li><a href="#" class="nav-link" data-page="centers">Centers & Patients</a></li>
+                <li><a href="#" class="nav-link" data-page="dosage-calculator">Dosage Calculator</a></li>
+                <li><a href="#" class="nav-link" data-page="stock">Stock Management</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <div class="container">
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="page active">
+            <h1>Dashboard</h1>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Overall Stock Remaining</h3>
+                    <div class="stat-value" id="overall-stock">0 vials</div>
+                    <p>Last updated: <span id="last-updated">-</span></p>
+                </div>
+                <div class="stat-card">
+                    <h3>This Month's Consumption</h3>
+                    <div class="stat-value" id="month-consumption">0 vials</div>
+                    <p>vs Target: <span id="consumption-vs-target">-</span></p>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Patients</h3>
+                    <div class="stat-value" id="total-patients">0</div>
+                    <p>Across <span id="total-centers">0</span> centers</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Monthly Consumption vs Target</h2>
+                    <select id="month-select">
+                        <option value="0">January</option>
+                        <option value="1">February</option>
+                        <option value="2">March</option>
+                        <option value="3">April</option>
+                        <option value="4">May</option>
+                        <option value="5">June</option>
+                        <option value="6">July</option>
+                        <option value="7">August</option>
+                        <option value="8">September</option>
+                        <option value="9">October</option>
+                        <option value="10">November</option>
+                        <option value="11">December</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="consumption-chart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Stock Status by Center</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="stock-chart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Centers & Patients Page -->
+        <div id="centers" class="page">
+            <h1>Centers & Patients</h1>
+            
+            <div class="tabs">
+                <div class="tab active" data-tab="centers-tab">Centers</div>
+                <div class="tab" data-tab="patients-tab">Patients</div>
+            </div>
+            
+            <!-- Centers Tab -->
+            <div id="centers-tab" class="tab-content active">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Centers List</h2>
+                        <button id="add-center-btn">Add New Center</button>
+                    </div>
+                    <table id="centers-table">
+                        <thead>
+                            <tr>
+                                <th>Center Name</th>
+                                <th>Location</th>
+                                <th>Number of Patients</th>
+                                <th>Monthly Consumption</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Centers will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="center-form" class="card hidden">
+                    <div class="card-header">
+                        <h2 id="center-form-title">Add New Center</h2>
+                    </div>
+                    <form id="center-data-form">
+                        <input type="hidden" id="center-id">
+                        <div class="form-group">
+                            <label for="center-name">Center Name</label>
+                            <input type="text" id="center-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="center-location">Location</label>
+                            <input type="text" id="center-location" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="center-contact">Contact Person</label>
+                            <input type="text" id="center-contact" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="center-phone">Phone Number</label>
+                            <input type="text" id="center-phone" required>
+                        </div>
+                        <div class="action-buttons">
+                            <button type="submit" id="save-center-btn">Save Center</button>
+                            <button type="button" id="cancel-center-btn" class="btn-danger">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Patients Tab -->
+            <div id="patients-tab" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Patients List</h2>
+                        <button id="add-patient-btn">Add New Patient</button>
+                    </div>
+                    <table id="patients-table">
+                        <thead>
+                            <tr>
+                                <th>Patient ID</th>
+                                <th>Name</th>
+                                <th>Age</th>
+                                <th>Weight (kg)</th>
+                                <th>Center</th>
+                                <th>Current Dosage</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Patients will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="patient-form" class="card hidden">
+                    <div class="card-header">
+                        <h2 id="patient-form-title">Add New Patient</h2>
+                    </div>
+                    <form id="patient-data-form">
+                        <input type="hidden" id="patient-id">
+                        <div class="form-group">
+                            <label for="patient-name">Patient Name</label>
+                            <input type="text" id="patient-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="patient-age">Age</label>
+                            <input type="number" id="patient-age" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="patient-weight">Weight (kg)</label>
+                            <input type="number" id="patient-weight" min="0" step="0.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="patient-center">Center</label>
+                            <select id="patient-center" required>
+                                <!-- Centers will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="patient-dosage">Current Dosage (mg)</label>
+                            <input type="number" id="patient-dosage" min="0" step="0.1" required>
+                        </div>
+                        <div class="action-buttons">
+                            <button type="submit" id="save-patient-btn">Save Patient</button>
+                            <button type="button" id="cancel-patient-btn" class="btn-danger">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dosage Calculator Page -->
+        <div id="dosage-calculator" class="page">
+            <h1>Dosage Calculator</h1>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Calculate Ideal Dosage</h2>
+                </div>
+                <form id="dosage-form">
+                    <div class="form-group">
+                        <label for="calc-age">Patient Age (years)</label>
+                        <input type="number" id="calc-age" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="calc-weight">Patient Weight (kg)</label>
+                        <input type="number" id="calc-weight" min="0" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit">Calculate Dosage</button>
+                    </div>
+                </form>
+                
+                <div id="dosage-result" class="hidden">
+                    <h3>Recommended Dosage: <span id="recommended-dosage">0</span> mg</h3>
+                    <p>Based on age and weight, the calculated daily dosage is <span id="calculated-dosage">0</span> mg.</p>
+                    
+                    <div class="form-group">
+                        <label for="vials-received">Vials Received per Visit</label>
+                        <input type="number" id="vials-received" min="1" value="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <button id="calculate-supply">Calculate Supply Duration</button>
+                    </div>
+                    
+                    <div id="supply-result" class="hidden">
+                        <h4>Supply Information</h4>
+                        <p><strong>Vial Size:</strong> 60 mg per vial</p>
+                        <p><strong>Total Medication:</strong> <span id="total-medication">0</span> mg</p>
+                        <p><strong>Estimated Days Supply:</strong> <span id="days-supply">0</span> days</p>
+                        <p><strong>Monthly Consumption:</strong> <span id="monthly-consumption">0</span> vials</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Dosage Guidelines</h2>
+                </div>
+                <p>EVRYSDI (risdiplam) is administered orally once daily after a meal.</p>
+                <p>The recommended dosage is based on the patient's age and weight:</p>
+                <ul>
+                    <li>For patients 2 months to less than 2 years: 0.15 mg/kg once daily</li>
+                    <li>For patients 2 years to less than 12 years: 0.20 mg/kg once daily</li>
+                    <li>For patients 12 years and older: 0.25 mg/kg once daily (maximum 5 mg)</li>
+                </ul>
+                <p><em>Note: This calculator provides estimated values. Always follow prescribing physician instructions.</em></p>
+            </div>
+        </div>
+        
+        <!-- Stock Management Page -->
+        <div id="stock" class="page">
+            <h1>Stock Management</h1>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Stock Transactions</h2>
+                    <button id="add-stock-btn">Add Stock Entry</button>
+                </div>
+                <table id="stock-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Center</th>
+                            <th>Transaction Type</th>
+                            <th>Quantity (vials)</th>
+                            <th>Balance (vials)</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Stock transactions will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="stock-form" class="card hidden">
+                <div class="card-header">
+                    <h2>Add Stock Transaction</h2>
+                </div>
+                <form id="stock-data-form">
+                    <div class="form-group">
+                        <label for="stock-date">Date</label>
+                        <input type="date" id="stock-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="stock-center">Center</label>
+                        <select id="stock-center" required>
+                            <option value="">Select Center</option>
+                            <!-- Centers will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="stock-type">Transaction Type</label>
+                        <select id="stock-type" required>
+                            <option value="delivery">Delivery Received</option>
+                            <option value="consumption">Consumption</option>
+                            <option value="adjustment">Adjustment</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="stock-quantity">Quantity (vials)</label>
+                        <input type="number" id="stock-quantity" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="stock-notes">Notes</label>
+                        <input type="text" id="stock-notes">
+                    </div>
+                    <div class="action-buttons">
+                        <button type="submit" id="save-stock-btn">Save Transaction</button>
+                        <button type="button" id="cancel-stock-btn" class="btn-danger">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Current Stock by Center</h2>
+                </div>
+                <table id="current-stock-table">
+                    <thead>
+                        <tr>
+                            <th>Center</th>
+                            <th>Current Stock (vials)</th>
+                            <th>Last Delivery</th>
+                            <th>Monthly Consumption</th>
+                            <th>Estimated Days Remaining</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Current stock will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // Data storage
+        let centers = JSON.parse(localStorage.getItem('evrysdi-centers')) || [];
+        let patients = JSON.parse(localStorage.getItem('evrysdi-patients')) || [];
+        let stockTransactions = JSON.parse(localStorage.getItem('evrysdi-stock')) || [];
+        
+        // Initialize with sample data if empty
+        if (centers.length === 0) {
+            centers = [
+                { id: 1, name: "Main Hospital", location: "City Center", contact: "Dr. Smith", phone: "123-456-7890" },
+                { id: 2, name: "Children's Clinic", location: "North District", contact: "Dr. Johnson", phone: "123-456-7891" }
+            ];
+            localStorage.setItem('evrysdi-centers', JSON.stringify(centers));
+        }
+        
+        if (patients.length === 0) {
+            patients = [
+                { id: 1, name: "John Doe", age: 8, weight: 25, centerId: 1, dosage: 5.0 },
+                { id: 2, name: "Jane Smith", age: 5, weight: 18, centerId: 2, dosage: 3.6 },
+                { id: 3, name: "Robert Brown", age: 12, weight: 40, centerId: 1, dosage: 5.0 }
+            ];
+            localStorage.setItem('evrysdi-patients', JSON.stringify(patients));
+        }
+        
+        if (stockTransactions.length === 0) {
+            const today = new Date();
+            stockTransactions = [
+                { id: 1, date: new Date(today.getFullYear(), today.getMonth(), 1), centerId: 1, type: "delivery", quantity: 50, notes: "Monthly delivery" },
+                { id: 2, date: new Date(today.getFullYear(), today.getMonth(), 1), centerId: 2, type: "delivery", quantity: 30, notes: "Monthly delivery" },
+                { id: 3, date: new Date(today.getFullYear(), today.getMonth(), 15), centerId: 1, type: "consumption", quantity: 25, notes: "Monthly consumption" },
+                { id: 4, date: new Date(today.getFullYear(), today.getMonth(), 15), centerId: 2, type: "consumption", quantity: 15, notes: "Monthly consumption" }
+            ];
+            localStorage.setItem('evrysdi-stock', JSON.stringify(stockTransactions));
+        }
+        
+        // Utility functions
+        function generateId(array) {
+            return array.length > 0 ? Math.max(...array.map(item => item.id)) + 1 : 1;
+        }
+        
+        function getCenterById(id) {
+            return centers.find(center => center.id === id);
+        }
+        
+        function getPatientsByCenter(centerId) {
+            return patients.filter(patient => patient.centerId === centerId);
+        }
+        
+        function calculateIdealDosage(age, weight) {
+            if (age < 2) {
+                return weight * 0.15;
+            } else if (age < 12) {
+                return weight * 0.20;
+            } else {
+                return Math.min(weight * 0.25, 5.0); // Max 5mg for patients 12+
+            }
+        }
+        
+        function calculateMonthlyConsumption(dosage) {
+            // 60mg per vial, 30 days in a month
+            return (dosage * 30) / 60;
+        }
+        
+        function getCurrentStock(centerId) {
+            let stock = 0;
+            stockTransactions.forEach(transaction => {
+                if (transaction.centerId === centerId) {
+                    if (transaction.type === "delivery") {
+                        stock += transaction.quantity;
+                    } else {
+                        stock -= transaction.quantity;
+                    }
+                }
+            });
+            return stock;
+        }
+        
+        function getMonthlyConsumption(centerId, month, year) {
+            const monthConsumption = stockTransactions
+                .filter(t => 
+                    t.centerId === centerId && 
+                    t.type === "consumption" && 
+                    t.date.getMonth() === month && 
+                    t.date.getFullYear() === year
+                )
+                .reduce((sum, t) => sum + t.quantity, 0);
+                
+            return monthConsumption;
+        }
+        
+        function getTargetConsumption(centerId) {
+            const centerPatients = getPatientsByCenter(centerId);
+            return centerPatients.reduce((sum, patient) => {
+                return sum + calculateMonthlyConsumption(patient.dosage);
+            }, 0);
+        }
+        
+        // Navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const pageId = this.getAttribute('data-page');
+                
+                // Update active nav link
+                document.querySelectorAll('.nav-link').forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show selected page
+                document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+                document.getElementById(pageId).classList.add('active');
+                
+                // Refresh page data
+                if (pageId === 'dashboard') {
+                    updateDashboard();
+                } else if (pageId === 'centers') {
+                    updateCentersTable();
+                    updatePatientsTable();
+                } else if (pageId === 'stock') {
+                    updateStockTable();
+                    updateCurrentStockTable();
+                }
+            });
+        });
+        
+        // Tab navigation
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+                
+                // Update active tab
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show selected tab content
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Dashboard functions
+        function updateDashboard() {
+            // Update stats
+            const totalStock = centers.reduce((sum, center) => sum + getCurrentStock(center.id), 0);
+            document.getElementById('overall-stock').textContent = `${totalStock} vials`;
+            
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            const monthConsumption = centers.reduce((sum, center) => 
+                sum + getMonthlyConsumption(center.id, currentMonth, currentYear), 0);
+            document.getElementById('month-consumption').textContent = `${monthConsumption} vials`;
+            
+            const targetConsumption = centers.reduce((sum, center) => 
+                sum + getTargetConsumption(center.id), 0);
+            const consumptionDiff = monthConsumption - targetConsumption;
+            const consumptionText = `${targetConsumption.toFixed(1)} vials (${consumptionDiff >= 0 ? '+' : ''}${consumptionDiff.toFixed(1)})`;
+            document.getElementById('consumption-vs-target').textContent = consumptionText;
+            document.getElementById('consumption-vs-target').className = consumptionDiff >= 0 ? 'stat-negative' : 'stat-positive';
+            
+            document.getElementById('total-patients').textContent = patients.length;
+            document.getElementById('total-centers').textContent = centers.length;
+            document.getElementById('last-updated').textContent = new Date().toLocaleDateString();
+            
+            // Update charts
+            updateConsumptionChart();
+            updateStockChart();
+        }
+        
+        function updateConsumptionChart() {
+            const selectedMonth = parseInt(document.getElementById('month-select').value);
+            const currentYear = new Date().getFullYear();
+            
+            const centerData = centers.map(center => {
+                const actual = getMonthlyConsumption(center.id, selectedMonth, currentYear);
+                const target = getTargetConsumption(center.id);
+                return {
+                    center: center.name,
+                    actual: actual,
+                    target: target
+                };
+            });
+            
+            const ctx = document.getElementById('consumption-chart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.consumptionChart) {
+                window.consumptionChart.destroy();
+            }
+            
+            window.consumptionChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: centerData.map(d => d.center),
+                    datasets: [
+                        {
+                            label: 'Actual Consumption',
+                            data: centerData.map(d => d.actual),
+                            backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                            borderColor: 'rgba(52, 152, 219, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Target Consumption',
+                            data: centerData.map(d => d.target),
+                            backgroundColor: 'rgba(46, 204, 113, 0.7)',
+                            borderColor: 'rgba(46, 204, 113, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Vials'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateStockChart() {
+            const centerData = centers.map(center => {
+                return {
+                    center: center.name,
+                    stock: getCurrentStock(center.id)
+                };
+            });
+            
+            const ctx = document.getElementById('stock-chart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.stockChart) {
+                window.stockChart.destroy();
+            }
+            
+            window.stockChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: centerData.map(d => d.center),
+                    datasets: [{
+                        data: centerData.map(d => d.stock),
+                        backgroundColor: [
+                            'rgba(52, 152, 219, 0.7)',
+                            'rgba(46, 204, 113, 0.7)',
+                            'rgba(155, 89, 182, 0.7)',
+                            'rgba(241, 196, 15, 0.7)',
+                            'rgba(230, 126, 34, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(52, 152, 219, 1)',
+                            'rgba(46, 204, 113, 1)',
+                            'rgba(155, 89, 182, 1)',
+                            'rgba(241, 196, 15, 1)',
+                            'rgba(230, 126, 34, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+        
+        // Centers functions
+        function updateCentersTable() {
+            const tableBody = document.querySelector('#centers-table tbody');
+            tableBody.innerHTML = '';
+            
+            centers.forEach(center => {
+                const centerPatients = getPatientsByCenter(center.id);
+                const monthlyConsumption = getTargetConsumption(center.id);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${center.name}</td>
+                    <td>${center.location}</td>
+                    <td>${centerPatients.length}</td>
+                    <td>${monthlyConsumption.toFixed(1)} vials</td>
+                    <td class="action-buttons">
+                        <button class="edit-center" data-id="${center.id}">Edit</button>
+                        <button class="delete-center btn-danger" data-id="${center.id}">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            // Add event listeners for edit and delete buttons
+            document.querySelectorAll('.edit-center').forEach(button => {
+                button.addEventListener('click', function() {
+                    const centerId = parseInt(this.getAttribute('data-id'));
+                    editCenter(centerId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-center').forEach(button => {
+                button.addEventListener('click', function() {
+                    const centerId = parseInt(this.getAttribute('data-id'));
+                    deleteCenter(centerId);
+                });
+            });
+        }
+        
+        function editCenter(id) {
+            const center = getCenterById(id);
+            if (!center) return;
+            
+            document.getElementById('center-id').value = center.id;
+            document.getElementById('center-name').value = center.name;
+            document.getElementById('center-location').value = center.location;
+            document.getElementById('center-contact').value = center.contact;
+            document.getElementById('center-phone').value = center.phone;
+            
+            document.getElementById('center-form-title').textContent = 'Edit Center';
+            document.getElementById('center-form').classList.remove('hidden');
+        }
+        
+        function deleteCenter(id) {
+            if (confirm('Are you sure you want to delete this center? This will also remove all associated patients.')) {
+                // Remove patients associated with this center
+                patients = patients.filter(patient => patient.centerId !== id);
+                localStorage.setItem('evrysdi-patients', JSON.stringify(patients));
+                
+                // Remove center
+                centers = centers.filter(center => center.id !== id);
+                localStorage.setItem('evrysdi-centers', JSON.stringify(centers));
+                
+                updateCentersTable();
+                updatePatientsTable();
+                updateDashboard();
+            }
+        }
+        
+        // Patients functions
+        function updatePatientsTable() {
+            const tableBody = document.querySelector('#patients-table tbody');
+            tableBody.innerHTML = '';
+            
+            // Update center dropdown in patient form
+            const centerSelect = document.getElementById('patient-center');
+            centerSelect.innerHTML = '';
+            centers.forEach(center => {
+                const option = document.createElement('option');
+                option.value = center.id;
+                option.textContent = center.name;
+                centerSelect.appendChild(option);
+            });
+            
+            patients.forEach(patient => {
+                const center = getCenterById(patient.centerId);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${patient.id}</td>
+                    <td>${patient.name}</td>
+                    <td>${patient.age}</td>
+                    <td>${patient.weight}</td>
+                    <td>${center ? center.name : 'Unknown'}</td>
+                    <td>${patient.dosage} mg</td>
+                    <td class="action-buttons">
+                        <button class="edit-patient" data-id="${patient.id}">Edit</button>
+                        <button class="delete-patient btn-danger" data-id="${patient.id}">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            // Add event listeners for edit and delete buttons
+            document.querySelectorAll('.edit-patient').forEach(button => {
+                button.addEventListener('click', function() {
+                    const patientId = parseInt(this.getAttribute('data-id'));
+                    editPatient(patientId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-patient').forEach(button => {
+                button.addEventListener('click', function() {
+                    const patientId = parseInt(this.getAttribute('data-id'));
+                    deletePatient(patientId);
+                });
+            });
+        }
+        
+        function editPatient(id) {
+            const patient = patients.find(p => p.id === id);
+            if (!patient) return;
+            
+            document.getElementById('patient-id').value = patient.id;
+            document.getElementById('patient-name').value = patient.name;
+            document.getElementById('patient-age').value = patient.age;
+            document.getElementById('patient-weight').value = patient.weight;
+            document.getElementById('patient-center').value = patient.centerId;
+            document.getElementById('patient-dosage').value = patient.dosage;
+            
+            document.getElementById('patient-form-title').textContent = 'Edit Patient';
+            document.getElementById('patient-form').classList.remove('hidden');
+        }
+        
+        function deletePatient(id) {
+            if (confirm('Are you sure you want to delete this patient?')) {
+                patients = patients.filter(patient => patient.id !== id);
+                localStorage.setItem('evrysdi-patients', JSON.stringify(patients));
+                
+                updatePatientsTable();
+                updateDashboard();
+            }
+        }
+        
+        // Dosage calculator functions
+        document.getElementById('dosage-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const age = parseFloat(document.getElementById('calc-age').value);
+            const weight = parseFloat(document.getElementById('calc-weight').value);
+            
+            const idealDosage = calculateIdealDosage(age, weight);
+            
+            document.getElementById('recommended-dosage').textContent = idealDosage.toFixed(2);
+            document.getElementById('calculated-dosage').textContent = idealDosage.toFixed(2);
+            document.getElementById('dosage-result').classList.remove('hidden');
+            document.getElementById('supply-result').classList.add('hidden');
+        });
+        
+        document.getElementById('calculate-supply').addEventListener('click', function() {
+            const dosage = parseFloat(document.getElementById('recommended-dosage').textContent);
+            const vials = parseInt(document.getElementById('vials-received').value);
+            
+            const totalMedication = vials * 60; // 60mg per vial
+            const daysSupply = totalMedication / dosage;
+            const monthlyConsumption = calculateMonthlyConsumption(dosage);
+            
+            document.getElementById('total-medication').textContent = totalMedication;
+            document.getElementById('days-supply').textContent = daysSupply.toFixed(1);
+            document.getElementById('monthly-consumption').textContent = monthlyConsumption.toFixed(1);
+            document.getElementById('supply-result').classList.remove('hidden');
+        });
+        
+        // Stock functions
+        function updateStockTable() {
+            const tableBody = document.querySelector('#stock-table tbody');
+            tableBody.innerHTML = '';
+            
+            // Update center dropdown in stock form
+            const centerSelect = document.getElementById('stock-center');
+            centerSelect.innerHTML = '<option value="">Select Center</option>';
+            centers.forEach(center => {
+                const option = document.createElement('option');
+                option.value = center.id;
+                option.textContent = center.name;
+                centerSelect.appendChild(option);
+            });
+            
+            // Sort transactions by date (newest first)
+            const sortedTransactions = [...stockTransactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            sortedTransactions.forEach(transaction => {
+                const center = getCenterById(transaction.centerId);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${new Date(transaction.date).toLocaleDateString()}</td>
+                    <td>${center ? center.name : 'Unknown'}</td>
+                    <td>${transaction.type}</td>
+                    <td>${transaction.quantity}</td>
+                    <td>${getCurrentStock(transaction.centerId)}</td>
+                    <td>${transaction.notes}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        function updateCurrentStockTable() {
+            const tableBody = document.querySelector('#current-stock-table tbody');
+            tableBody.innerHTML = '';
+            
+            centers.forEach(center => {
+                const currentStock = getCurrentStock(center.id);
+                const monthlyConsumption = getTargetConsumption(center.id);
+                const daysRemaining = monthlyConsumption > 0 ? (currentStock / monthlyConsumption) * 30 : 0;
+                
+                // Find last delivery date
+                const deliveries = stockTransactions
+                    .filter(t => t.centerId === center.id && t.type === "delivery")
+                    .sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                const lastDelivery = deliveries.length > 0 ? new Date(deliveries[0].date).toLocaleDateString() : "None";
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${center.name}</td>
+                    <td>${currentStock}</td>
+                    <td>${lastDelivery}</td>
+                    <td>${monthlyConsumption.toFixed(1)}</td>
+                    <td>${daysRemaining.toFixed(1)}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Form handlers
+        document.getElementById('add-center-btn').addEventListener('click', function() {
+            document.getElementById('center-id').value = '';
+            document.getElementById('center-data-form').reset();
+            document.getElementById('center-form-title').textContent = 'Add New Center';
+            document.getElementById('center-form').classList.remove('hidden');
+        });
+        
+        document.getElementById('cancel-center-btn').addEventListener('click', function() {
+            document.getElementById('center-form').classList.add('hidden');
+        });
+        
+        document.getElementById('center-data-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const centerId = document.getElementById('center-id').value;
+            const name = document.getElementById('center-name').value;
+            const location = document.getElementById('center-location').value;
+            const contact = document.getElementById('center-contact').value;
+            const phone = document.getElementById('center-phone').value;
+            
+            if (centerId) {
+                // Update existing center
+                const index = centers.findIndex(c => c.id === parseInt(centerId));
+                if (index !== -1) {
+                    centers[index] = {
+                        id: parseInt(centerId),
+                        name,
+                        location,
+                        contact,
+                        phone
+                    };
+                }
+            } else {
+                // Add new center
+                centers.push({
+                    id: generateId(centers),
+                    name,
+                    location,
+                    contact,
+                    phone
+                });
+            }
+            
+            localStorage.setItem('evrysdi-centers', JSON.stringify(centers));
+            document.getElementById('center-form').classList.add('hidden');
+            updateCentersTable();
+            updateDashboard();
+        });
+        
+        document.getElementById('add-patient-btn').addEventListener('click', function() {
+            document.getElementById('patient-id').value = '';
+            document.getElementById('patient-data-form').reset();
+            document.getElementById('patient-form-title').textContent = 'Add New Patient';
+            document.getElementById('patient-form').classList.remove('hidden');
+        });
+        
+        document.getElementById('cancel-patient-btn').addEventListener('click', function() {
+            document.getElementById('patient-form').classList.add('hidden');
+        });
+        
+        document.getElementById('patient-data-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const patientId = document.getElementById('patient-id').value;
+            const name = document.getElementById('patient-name').value;
+            const age = parseInt(document.getElementById('patient-age').value);
+            const weight = parseFloat(document.getElementById('patient-weight').value);
+            const centerId = parseInt(document.getElementById('patient-center').value);
+            const dosage = parseFloat(document.getElementById('patient-dosage').value);
+            
+            if (patientId) {
+                // Update existing patient
+                const index = patients.findIndex(p => p.id === parseInt(patientId));
+                if (index !== -1) {
+                    patients[index] = {
+                        id: parseInt(patientId),
+                        name,
+                        age,
+                        weight,
+                        centerId,
+                        dosage
+                    };
+                }
+            } else {
+                // Add new patient
+                patients.push({
+                    id: generateId(patients),
+                    name,
+                    age,
+                    weight,
+                    centerId,
+                    dosage
+                });
+            }
+            
+            localStorage.setItem('evrysdi-patients', JSON.stringify(patients));
+            document.getElementById('patient-form').classList.add('hidden');
+            updatePatientsTable();
+            updateDashboard();
+        });
+        
+        document.getElementById('add-stock-btn').addEventListener('click', function() {
+            document.getElementById('stock-data-form').reset();
+            document.getElementById('stock-date').valueAsDate = new Date();
+            document.getElementById('stock-form').classList.remove('hidden');
+        });
+        
+        document.getElementById('cancel-stock-btn').addEventListener('click', function() {
+            document.getElementById('stock-form').classList.add('hidden');
+        });
+        
+        document.getElementById('stock-data-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const date = new Date(document.getElementById('stock-date').value);
+            const centerId = parseInt(document.getElementById('stock-center').value);
+            const type = document.getElementById('stock-type').value;
+            const quantity = parseInt(document.getElementById('stock-quantity').value);
+            const notes = document.getElementById('stock-notes').value;
+            
+            stockTransactions.push({
+                id: generateId(stockTransactions),
+                date,
+                centerId,
+                type,
+                quantity,
+                notes
+            });
+            
+            localStorage.setItem('evrysdi-stock', JSON.stringify(stockTransactions));
+            document.getElementById('stock-form').classList.add('hidden');
+            updateStockTable();
+            updateCurrentStockTable();
+            updateDashboard();
+        });
+        
+        // Month selector change handler
+        document.getElementById('month-select').addEventListener('change', function() {
+            updateConsumptionChart();
+        });
+        
+        // Initialize the dashboard on page load
+        updateDashboard();
+        updateCentersTable();
+        updatePatientsTable();
+        updateStockTable();
+        updateCurrentStockTable();
+    </script>
+</body>
+</html>
